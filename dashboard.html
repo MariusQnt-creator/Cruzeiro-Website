@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cruzeiro Training Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><circle cx="50" cy="50" r="20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></svg>') center/100px no-repeat;
+            opacity: 0.3;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e40af;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .logo-text p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #1e40af;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            color: #1e40af;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .card-subtitle {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #1e40af;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 0.8rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .success-message {
+            background: #10b981;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .history-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: #f1f5f9;
+            border-color: #3b82f6;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-date {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-details {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .history-detail {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .history-detail-label {
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .history-detail-value {
+            color: #1e40af;
+        }
+
+        .history-observations {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚽</div>
+                <div class="logo-text">
+                    <h1>Cruzeiro Training Tracker</h1>
+                    <p>Sistema de Gestão de Treinamento</p>
+                </div>
+            </div>
+            <nav class="nav-buttons">
+                <button class="nav-btn active" onclick="showPage('register')">Registrar Treino</button>
+                <button class="nav-btn" onclick="showPage('reports')">📊 Relatórios</button>
+                <button class="nav-btn" onclick="showPage('history')">📋 Histórico</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Registration Page -->
+        <div id="register" class="page active">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">+</div>
+                    <div>
+                        <h2 class="card-title">Registrar Sessão de Treino</h2>
+                        <p class="card-subtitle">Adicione os detalhes da sessão de treinamento</p>
+                    </div>
+                </div>
+
+                <div class="success-message" id="successMessage">
+                    ✅ Sessão de treino registrada com sucesso!
+                </div>
+
+                <form id="trainingForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                🗓️ Data do Treino
+                            </label>
+                            <input type="date" class="form-input" id="trainingDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                👥 Categoria
+                            </label>
+                            <select class="form-select" id="category" required>
+                                <option value="">Selecione a categoria</option>
+                                <option value="U14">U14</option>
+                                <option value="U16">U16</option>
+                                <option value="U18">U18</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                🎯 Tipo de Treinamento
+                            </label>
+                            <select class="form-select" id="trainingType" required onchange="updateSubcategories()">
+                                <option value="">Selecione o tipo</option>
+                                <option value="Technical Abilities">1. Technical Abilities</option>
+                                <option value="Basic Tactical Skills">2. Basic Tactical Skills</option>
+                                <option value="Coordination Skills">3. Coordination Skills (with the ball)</option>
+                                <option value="Creativity and Intelligence games">4. Creativity and Intelligence games</option>
+                                <option value="Technique Contents">5. Technique Contents</option>
+                                <option value="Specific technique by position">6. Specific technique by position</option>
+                                <option value="Functional Structures">7. Functional Structures</option>
+                                <option value="Core tactical Principles">8. Core tactical Principles</option>
+                                <option value="Specific Tactical Contents">9. Specific Tactical Contents</option>
+                                <option value="Specific physical contents">10. Specific physical contents</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="subcategoryGroup" style="display: none;">
+                            <label class="form-label">
+                                📋 Subcategoria
+                            </label>
+                            <select class="form-select" id="subcategory">
+                                <option value="">Selecione a subcategoria</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                ⏱️ Duração (minutos)
+                            </label>
+                            <input type="number" class="form-input" id="duration" placeholder="ex: 25" min="1" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                📝 Observações (opcional)
+                            </label>
+                            <textarea class="form-textarea" id="observations" placeholder="Adicione observações sobre a sessão..."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        ✅ Registrar Sessão
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div id="reports" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <div>
+                        <h2 class="card-title">Relatórios de Treinamento</h2>
+                        <p class="card-subtitle">Visualize as estatísticas e gráficos do treinamento</p>
+                    </div>
+                </div>
+
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label class="form-label">Filtrar por Categoria:</label>
+                        <select class="form-select" id="filterCategory" onchange="updateReports()">
+                            <option value="">Todas as categorias</option>
+                            <option value="U14">U14</option>
+                            <option value="U16">U16</option>
+                            <option value="U18">U18</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">Filtrar por Tipo:</label>
+                        <select class="form-select" id="filterType" onchange="updateReports()">
+                            <option value="">Todos os tipos</option>
+                            <option value="Technical Abilities">Technical Abilities</option>
+                            <option value="Basic Tactical Skills">Basic Tactical Skills</option>
+                            <option value="Coordination Skills">Coordination Skills</option>
+                            <option value="Creativity and Intelligence games">Creativity and Intelligence games</option>
+                            <option value="Technique Contents">Technique Contents</option>
+                            <option value="Specific technique by position">Specific technique by position</option>
+                            <option value="Functional Structures">Functional Structures</option>
+                            <option value="Core tactical Principles">Core tactical Principles</option>
+                            <option value="Specific Tactical Contents">Specific Tactical Contents</option>
+                            <option value="Specific physical contents">Specific physical contents</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">Período:</label>
+                        <select class="form-select" id="filterPeriod" onchange="updateReports()">
+                            <option value="">Todos os períodos</option>
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="30">Últimos 30 dias</option>
+                            <option value="90">Últimos 90 dias</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalSessions">0</div>
+                        <div class="stat-label">Total de Sessões</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalMinutes">0</div>
+                        <div class="stat-label">Total de Minutos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="averageSession">0</div>
+                        <div class="stat-label">Média por Sessão</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="mostTrained">-</div>
+                        <div class="stat-label">Mais Treinado</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #1e40af; margin: 0;">Distribuição por Categoria de Treino</h3>
+                        <button class="submit-btn" onclick="exportChart('barChart', 'distribuicao-treino')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            📊 Exportar Gráfico
+                        </button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #1e40af; margin: 0;">Proporção de Tempo por Tipo</h3>
+                        <button class="submit-btn" onclick="exportChart('pieChart', 'proporcao-tempo')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            📊 Exportar Gráfico
+                        </button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="submit-btn" onclick="exportReport()" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                        📋 Exportar Relatório Completo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Page -->
+        <div id="history" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div>
+                        <h2 class="card-title">Histórico de Treinos</h2>
+                        <p class="card-subtitle">Visualize e gerencie todos os treinos registrados</p>
+                    </div>
+                </div>
+
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label class="form-label">Filtrar por Categoria:</label>
+                        <select class="form-select" id="historyFilterCategory" onchange="updateHistory()">
+                            <option value="">Todas as categorias</option>
+                            <option value="U14">U14</option>
+                            <option value="U16">U16</option>
+                            <option value="U18">U18</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">Filtrar por Tipo:</label>
+                        <select class="form-select" id="historyFilterType" onchange="updateHistory()">
+                            <option value="">Todos os tipos</option>
+                            <option value="Technical Abilities">Technical Abilities</option>
+                            <option value="Basic Tactical Skills">Basic Tactical Skills</option>
+                            <option value="Coordination Skills">Coordination Skills</option>
+                            <option value="Creativity and Intelligence games">Creativity and Intelligence games</option>
+                            <option value="Technique Contents">Technique Contents</option>
+                            <option value="Specific technique by position">Specific technique by position</option>
+                            <option value="Functional Structures">Functional Structures</option>
+                            <option value="Core tactical Principles">Core tactical Principles</option>
+                            <option value="Specific Tactical Contents">Specific Tactical Contents</option>
+                            <option value="Specific physical contents">Specific physical contents</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="historyList" class="history-list">
+                    <!-- Training entries will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Subcategories mapping
+        const subcategories = {
+            'Technique Contents': [
+                '5.1 Pass and receive',
+                '5.2 Guide control',
+                '5.3 Shooting',
+                '5.4 Header',
+                '5.5 Crossing',
+                '5.6 Driving + dribbling'
+            ],
+            'Core tactical Principles': [
+                '8.1 Offensive principles',
+                '8.2 Defensive principles'
+            ],
+            'Specific Tactical Contents': [
+                '9.1 Offensive Organisation',
+                '9.2 Defensive Organisation',
+                '9.3 Offensive Transition',
+                '9.4 Defensive Transition',
+                '9.5 Set Pieces'
+            ],
+            'Specific physical contents': [
+                '10.1 Coordination',
+                '10.2 Aerobic drills',
+                '10.3 Speed drills',
+                '10.4 Specific Strength',
+                '10.5 Injury prevention',
+                '10.6 Flexibility'
+            ]
+        };
+
+        // Initialize data storage using in-memory storage for Claude.ai
+        let trainingData = [];
+
+        // Chart instances
+        let barChart, pieChart;
+
+        // Set today's date as default
+        document.getElementById('trainingDate').valueAsDate = new Date();
+
+        // Page navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update reports if reports page is shown
+            if (pageId === 'reports') {
+                updateReports();
+            }
+            
+            // Update history if history page is shown
+            if (pageId === 'history') {
+                updateHistory();
+            }
+        }
+
+        // Update subcategories based on training type
+        function updateSubcategories() {
+            const trainingType = document.getElementById('trainingType').value;
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+            const subcategorySelect = document.getElementById('subcategory');
+            
+            if (subcategories[trainingType]) {
+                subcategoryGroup.style.display = 'block';
+                subcategorySelect.innerHTML = '<option value="">Selecione a subcategoria</option>';
+                
+                subcategories[trainingType].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    subcategorySelect.appendChild(option);
+                });
+                
+                subcategorySelect.required = true;
+            } else {
+                subcategoryGroup.style.display = 'none';
+                subcategorySelect.required = false;
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('trainingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                id: Date.now(),
+                date: document.getElementById('trainingDate').value,
+                category: document.getElementById('category').value,
+                trainingType: document.getElementById('trainingType').value,
+                subcategory: document.getElementById('subcategory').value,
+                duration: parseInt(document.getElementById('duration').value),
+                observations: document.getElementById('observations').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            trainingData.push(formData);
+            
+            // Show success message
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+            
+            // Reset form
+            this.reset();
+            document.getElementById('trainingDate').valueAsDate = new Date();
+            document.getElementById('subcategoryGroup').style.display = 'none';
+            document.getElementById('subcategory').required = false;
+        });
+
+        // Update reports
+        function updateReports() {
+            const filterCategory = document.getElementById('filterCategory').value;
+            const filterType = document.getElementById('filterType').value;
+            const filterPeriod = document.getElementById('filterPeriod').value;
+            
+            let filteredData = trainingData;
+            
+            // Filter by category
+            if (filterCategory) {
+                filteredData = filteredData.filter(item => item.category === filterCategory);
+            }
+            
+            // Filter by type
+            if (filterType) {
+                filteredData = filteredData.filter(item => item.trainingType === filterType);
+            }
+            
+            // Filter by period
+            if (filterPeriod) {
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - parseInt(filterPeriod));
+                filteredData = filteredData.filter(item => new Date(item.date) >= cutoffDate);
+            }
+            
+            // Update statistics
+            updateStatistics(filteredData);
+            
+            // Update charts
+            updateCharts(filteredData);
+        }
+
+        // Update statistics cards
+        function updateStatistics(data) {
+            const totalSessions = data.length;
+            const totalMinutes = data.reduce((sum, item) => sum + item.duration, 0);
+            const averageSession = totalSessions > 0 ? Math.round(totalMinutes / totalSessions) : 0;
+            
+            // Find most trained category
+            const categoryTotals = {};
+            data.forEach(item => {
+                const key = item.subcategory || item.trainingType;
+                categoryTotals[key] = (categoryTotals[key] || 0) + item.duration;
+            });
+            
+            const mostTrained = Object.keys(categoryTotals).length > 0 
+                ? Object.keys(categoryTotals).reduce((a, b) => categoryTotals[a] > categoryTotals[b] ? a : b)
+                : '-';
+            
+            document.getElementById('totalSessions').textContent = totalSessions;
+            document.getElementById('totalMinutes').textContent = totalMinutes;
+            document.getElementById('averageSession').textContent = averageSession;
+            document.getElementById('mostTrained').textContent = mostTrained.length > 20 ? mostTrained.substring(0, 20) + '...' : mostTrained;
+        }
+
+        // Update charts
+        function updateCharts(data) {
+            // Prepare data for bar chart
+            const categoryTotals = {};
+            data.forEach(item => {
+                const key = item.subcategory || item.trainingType;
+                categoryTotals[key] = (categoryTotals[key] || 0) + item.duration;
+            });
+            
+            const sortedCategories = Object.entries(categoryTotals)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10); // Top 10 categories
+            
+            // Create bar chart
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            if (barChart) barChart.destroy();
+            
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCategories.map(item => item[0]),
+                    datasets: [{
+                        label: 'Minutos de Treinamento',
+                        data: sortedCategories.map(item => item[1]),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Create pie chart
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            if (pieChart) pieChart.destroy();
+            
+            const colors = [
+                '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+                '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6b7280'
+            ];
+            
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: sortedCategories.map(item => item[0]),
+                    datasets: [{
+                        data: sortedCategories.map(item => item[1]),
+                        backgroundColor: colors.slice(0, sortedCategories.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize reports on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateReports();
+        });
+
+        // Update history page
+        function updateHistory() {
+            const filterCategory = document.getElementById('historyFilterCategory').value;
+            const filterType = document.getElementById('historyFilterType').value;
+            
+            let filteredData = trainingData;
+            
+            // Filter by category
+            if (filterCategory) {
+                filteredData = filteredData.filter(item => item.category === filterCategory);
+            }
+            
+            // Filter by type
+            if (filterType) {
+                filteredData = filteredData.filter(item => item.trainingType === filterType);
+            }
+            
+            // Sort by date (newest first)
+            filteredData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const historyList = document.getElementById('historyList');
+            
+            if (filteredData.length === 0) {
+                historyList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>Nenhum treino encontrado</h3>
+                        <p>Não há treinos registrados com os filtros selecionados.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            historyList.innerHTML = filteredData.map(item => `
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-info">
+                            <div class="history-date">${formatDate(item.date)}</div>
+                            <div class="history-title">${item.trainingType}</div>
+                            ${item.subcategory ? `<div style="font-size: 0.9rem; color: #64748b;">${item.subcategory}</div>` : ''}
+                        </div>
+                        <div class="history-actions">
+                            <button class="delete-btn" onclick="deleteTraining(${item.id})">
+                                🗑️ Excluir
+                            </button>
+                        </div>
+                    </div>
+                    <div class="history-details">
+                        <div class="history-detail">
+                            <span class="history-detail-label">Categoria:</span>
+                            <span class="history-detail-value">${item.category}</span>
+                        </div>
+                        <div class="history-detail">
+                            <span class="history-detail-label">Duração:</span>
+                            <span class="history-detail-value">${item.duration} min</span>
+                        </div>
+                    </div>
+                    ${item.observations ? `
+                        <div class="history-observations">
+                            <strong>Observações:</strong> ${item.observations}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Delete training
+        function deleteTraining(id) {
+            if (confirm('Tem certeza que deseja excluir este treino?')) {
+                trainingData = trainingData.filter(item => item.id !== id);
+                updateHistory();
+                // Update reports if on reports page
+                if (document.getElementById('reports').classList.contains('active')) {
+                    updateReports();
+                }
+            }
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Export chart as image
+        function exportChart(chartId, filename) {
+            const canvas = document.getElementById(chartId);
+            const link = document.createElement('a');
+            link.download = `${filename}-${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Export complete report
+        function exportReport() {
+            const filterCategory = document.getElementById('filterCategory').value;
+            const filterType = document.getElementById('filterType').value;
+            const filterPeriod = document.getElementById('filterPeriod').value;
+            
+            let filteredData = trainingData;
+            
+            // Apply same filters as reports
+            if (filterCategory) {
+                filteredData = filteredData.filter(item => item.category === filterCategory);
+            }
+            if (filterType) {
+                filteredData = filteredData.filter(item => item.trainingType === filterType);
+            }
+            if (filterPeriod) {
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - parseInt(filterPeriod));
+                filteredData = filteredData.filter(item => new Date(item.date) >= cutoffDate);
+            }
+            
+            // Generate report content
+            const totalSessions = filteredData.length;
+            const totalMinutes = filteredData.reduce((sum, item) => sum + item.duration, 0);
+            const averageSession = totalSessions > 0 ? Math.round(totalMinutes / totalSessions) : 0;
+            
+            const reportContent = `
+RELATÓRIO DE TREINAMENTO - CRUZEIRO
+=====================================
+
+Data do Relatório: ${new Date().toLocaleDateString('pt-BR')}
+
+FILTROS APLICADOS:
+- Categoria: ${filterCategory || 'Todas'}
+- Tipo de Treinamento: ${filterType || 'Todos'}
+- Período: ${filterPeriod ? `Últimos ${filterPeriod} dias` : 'Todos os períodos'}
+
+ESTATÍSTICAS GERAIS:
+- Total de Sessões: ${totalSessions}
+- Total de Minutos: ${totalMinutes}
+- Média por Sessão: ${averageSession} min
+
+DETALHES DOS TREINOS:
+${filteredData.map(item => `
+Data: ${formatDate(item.date)}
+Categoria: ${item.category}
+Tipo: ${item.trainingType}
+${item.subcategory ? `Subcategoria: ${item.subcategory}` : ''}
+Duração: ${item.duration} min
+${item.observations ? `Observações: ${item.observations}` : ''}
+---
+`).join('')}
+            `;
+            
+            // Create and download file
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.download = `relatorio-cruzeiro-${new Date().toISOString().split('T')[0]}.txt`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+    </script>
+</body>
+</html>
